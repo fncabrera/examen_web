@@ -97,11 +97,33 @@
   width: 50px;
   display: flex;
   flex-direction: column;
-  background-color: blue;
+  background-color: #06F4FB;
   padding: 5px;
   border-color: white;
   border-style: solid;
 }
+
+.celda-ocupada{
+  width: 50px;
+  display: flex;
+  flex-direction: column;
+  background-color: #DAE744;
+  padding: 5px;
+  border-color: white;
+  border-style: solid;
+}
+
+.celda-marco {
+  width: 50px;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  padding: 5px;
+  border-color: white;
+  border-style: solid;
+  margin-top: 5px;
+}
+
 
 .opciones{
   padding: 2%;

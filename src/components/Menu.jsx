@@ -1,41 +1,43 @@
 import React, { useState, useCallback, useEffect } from 'react';
 
 function Menu(props) {
-    const [fragata, setFragata] = useState(4);
-    const [crucero, setCrucero] = useState(3);
-    const [destructor, setDestructor] = useState(2);
-    const [portaviones, setPortaviones] = useState(1);
 
     function botonAsignar(tipo){
         var identificador = "";
         if (tipo === "fragata"){
-            identificador = `F${fragata}`
+            identificador = `F${4 - props.cantidadAsignados[0]}`
         } else if (tipo === "crucero") {
-            identificador = `C${crucero}`
+            identificador = `C${3 - props.cantidadAsignados[1]}`
         } else if (tipo === "destructor") {
-            identificador = `D${destructor}`
+            identificador = `D${2 - props.cantidadAsignados[2]}`
         } else if (tipo === "portaviones") {
             identificador = `P1`
         }
-        props.funcionAsignar()
+        props.funcionAsignar(identificador, tipo);
     }
 
-
+    function botonReiniciar() {
+        props.reiniciar();
+    }
+    
     return (
         <div>
+         
             <h3>Select a ship and add it to the board: </h3>
-
             <div>
-                <button onClick={(e) => botonAsignar("fragata")}> Fragata ({fragata}) </button> 
+                <button onClick={(e) => botonAsignar("fragata")}> Fragata ({4 - props.cantidadAsignados[0]}) </button> 
             </div>
             <div>
-                <button onClick={(e) => botonAsignar("crucero")}> Crucero ({crucero})</button> 
+                <button onClick={(e) => botonAsignar("crucero")}> Crucero ({3 - props.cantidadAsignados[1]})</button> 
             </div>
             <div>
-                <button onClick={(e) => botonAsignar("destructor")}>Destructor ({destructor})</button> 
+                <button onClick={(e) => botonAsignar("destructor")}>Destructor ({2 - props.cantidadAsignados[2]})</button> 
             </div>
             <div>
-                <button onClick={(e) => botonAsignar("portaviones")}>Portaviones ({portaviones})</button> 
+                <button onClick={(e) => botonAsignar("portaviones")}>Portaviones ({1 - props.cantidadAsignados[3]})</button> 
+            </div>
+            <div>
+                <button onClick={(e) => botonReiniciar()}> Reiniciar </button> 
             </div>
         </div>
     );
