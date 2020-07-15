@@ -3,6 +3,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 function Celda(props) {
     const [identificador, setIdentificador] = useState(false); //identificador del barco que esta actualmente
 
+
+        
     function crearCeldasNumeradas(){
         var tupla_celdas = [];
         var fila = 0;

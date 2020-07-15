@@ -5,7 +5,7 @@ import Celda from "./Celda";
 import CeldaMarco from "./CeldaMarco";
 import Menu from "./Menu";
 import Jugar from "./Jugar";
-
+import correrApi from "../auxiliar/api"
 
 function Restaurant() {
 
@@ -22,6 +22,10 @@ function Restaurant() {
   const [aMover, setAMover] = useState(200); // id de la celda que quizas pierda a su barco
   const [hundido, sethundido] = useState(new Array(100).fill(false,0,100)) //para indicar si en una jugada una casilla esta siendo marcada como inicio
   const [mensajes, setMensajes] = useState([]);
+  const [token, setToken] = useState();
+
+  //correrApi().then(resp => setToken(resp))
+  console.log(token)
 
   function creaMarcoSup() {
     var letras = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
@@ -166,7 +170,7 @@ function Restaurant() {
 
 
   return (
-    <div className="container">      
+    <div className="container">     
         <div className="tablero">
           <div className="flex-row">
             {creaMarcoSup()}
