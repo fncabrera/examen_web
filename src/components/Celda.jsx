@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import Imagen from "../images/barco.png";
 
 function Celda(props) {
     const [identificador, setIdentificador] = useState(false); //identificador del barco que esta actualmente
@@ -69,6 +70,72 @@ function Celda(props) {
         return false;
     }
 
+    function verificarValidezMov(){
+        var celdas = crearCeldasNumeradas();
+        var tupla_desde = celdas[props.id];
+        var tupla_hacia = 0;
+        var celdasValidas = [];
+        for (var i = 0; i < 100; i++){
+            tupla_hacia = celdas[i];
+            console.log(props.asignacion)
+            if (props.asignacion[0] == "F") {
+                if ((tupla_desde[0] == tupla_hacia[0] && Math.abs(tupla_desde[1] - tupla_hacia[1]) <= 4) || 
+                (tupla_desde[1] == tupla_hacia[1] && Math.abs(tupla_desde[0] - tupla_hacia[0]) <= 4)) {
+                    celdasValidas.push(i);
+                }
+            } else if (props.asignacion[0] == "C") {
+                if ((tupla_desde[0] == tupla_hacia[0] && Math.abs(tupla_desde[1] - tupla_hacia[1]) <= 3) || 
+                (tupla_desde[1] == tupla_hacia[1] && Math.abs(tupla_desde[0] - tupla_hacia[0]) <= 3)) {
+                    celdasValidas.push(i);
+                }
+            } else if (props.asignacion[0] == "D") {
+                if ((tupla_desde[0] == tupla_hacia[0] && Math.abs(tupla_desde[1] - tupla_hacia[1]) <= 2) || 
+                (tupla_desde[1] == tupla_hacia[1] && Math.abs(tupla_desde[0] - tupla_hacia[0]) <= 2)) {
+                    celdasValidas.push(i);
+                }
+            } else if (props.asignacion[0] == "P") {
+                if ((tupla_desde[0] == tupla_hacia[0] && Math.abs(tupla_desde[1] - tupla_hacia[1]) <= 1) || 
+                (tupla_desde[1] == tupla_hacia[1] && Math.abs(tupla_desde[0] - tupla_hacia[0]) <= 1)) {
+                    celdasValidas.push(i);
+                }
+            }
+        }
+        return celdasValidas
+    }
+
+    function verificarValidezDis(){
+        var celdas = crearCeldasNumeradas();
+        var tupla_desde = celdas[props.id];
+        var tupla_hacia = 0;
+        var celdasValidas = [];
+        for (var i = 0; i < 100; i++){
+            tupla_hacia = celdas[i];
+            console.log(props.asignacion)
+            if (props.asignacion[0] == "F") {
+                if ((tupla_desde[0] == tupla_hacia[0] && Math.abs(tupla_desde[1] - tupla_hacia[1]) <= 2) || 
+                (tupla_desde[1] == tupla_hacia[1] && Math.abs(tupla_desde[0] - tupla_hacia[0]) <= 2)) {
+                    celdasValidas.push(i);
+                }
+            } else if (props.asignacion[0] == "C") {
+                if ((tupla_desde[0] == tupla_hacia[0] && Math.abs(tupla_desde[1] - tupla_hacia[1]) <= 2) || 
+                (tupla_desde[1] == tupla_hacia[1] && Math.abs(tupla_desde[0] - tupla_hacia[0]) <= 2)) {
+                    celdasValidas.push(i);
+                }
+            } else if (props.asignacion[0] == "D") {
+                if ((tupla_desde[0] == tupla_hacia[0] && Math.abs(tupla_desde[1] - tupla_hacia[1]) <= 3) || 
+                (tupla_desde[1] == tupla_hacia[1] && Math.abs(tupla_desde[0] - tupla_hacia[0]) <= 3)) {
+                    celdasValidas.push(i);
+                }
+            } else if (props.asignacion[0] == "P") {
+                if ((tupla_desde[0] == tupla_hacia[0] && Math.abs(tupla_desde[1] - tupla_hacia[1]) <= 5) || 
+                (tupla_desde[1] == tupla_hacia[1] && Math.abs(tupla_desde[0] - tupla_hacia[0]) <= 5)) {
+                    celdasValidas.push(i);
+                }
+            }
+        }
+        return celdasValidas
+    }
+
     function verificarDisparo(){
         var celdas = crearCeldasNumeradas();
         var tupla_desde = celdas[props.desde];
@@ -121,7 +188,7 @@ function Celda(props) {
             if (!props.asignacion) {
                 alert("No hay barco en esta celda")
             } else {
-                props.seleccionarCasillaJugadaInicio(props.id, identificador)
+                props.seleccionarCasillaJugadaInicio(props.id, identificador, verificarValidezMov(), verificarValidezDis())
             }
             // es el destino de la jugada
 
@@ -155,10 +222,14 @@ function Celda(props) {
 
     return (
         //<div className={props.estado ? "mesa-ocupada" : props.estado === 0 ? "mesa-cerrada" : "mesa"} onClick={() => props.menu(props.id)}>
-        <div className={props.hundido ? "celda-hundida" : (props.asignacion ? "celda-ocupada" : "celda")} onClick={() => apretarCelda()}>
-        <span> {props.marca} </span>
-        <span> {props.hundido ? "X" : props.asignacion} </span>
-      </div>
+        <div className={props.hundido ? "celda-hundida" : (props.valida ? "blink-bg" : (props.asignacion ? "celda-ocupada" : "celda"))} onClick={() => apretarCelda()}>
+            {(props.asignacion && !props.hundido) && (
+                <img className="image" src={Imagen} alt="barco"/>
+            )}
+            <div className="top-left">
+                <span> {props.hundido ? "X" : props.asignacion} </span>
+            </div>
+        </div>
     );
   }
   

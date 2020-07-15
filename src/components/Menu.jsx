@@ -41,22 +41,22 @@ function Menu(props) {
          
             <h3>Select a ship and add it to the board: </h3>
             <div>
-                <button onClick={(e) => botonAsignar("fragata")}> Fragata ({4 - props.cantidadAsignados[0]}) </button> 
+                <button className="button-barcos" onClick={(e) => botonAsignar("fragata")}> Fragata ({4 - props.cantidadAsignados[0]}) </button> 
             </div>
             <div>
-                <button onClick={(e) => botonAsignar("crucero")}> Crucero ({3 - props.cantidadAsignados[1]})</button> 
+                <button className="button-barcos" onClick={(e) => botonAsignar("crucero")}> Crucero ({3 - props.cantidadAsignados[1]})</button> 
             </div>
             <div>
-                <button onClick={(e) => botonAsignar("destructor")}>Destructor ({2 - props.cantidadAsignados[2]})</button> 
+                <button className="button-barcos" onClick={(e) => botonAsignar("destructor")}>Destructor ({2 - props.cantidadAsignados[2]})</button> 
             </div>
             <div>
-                <button onClick={(e) => botonAsignar("portaviones")}>Portaviones ({1 - props.cantidadAsignados[3]})</button> 
+                <button className="button-barcos" onClick={(e) => botonAsignar("portaviones")}>Portaviones ({1 - props.cantidadAsignados[3]})</button> 
             </div>
             <div>
-                <button onClick={(e) => botonReiniciar()}> Reiniciar </button> 
+                <button className="button2" onClick={(e) => botonReiniciar()}> Reiniciar </button> 
             </div>
             <div>
-                <button onClick={(e) => botonIniciar()}> Jugar </button> 
+                <button className="button-iniciar" onClick={(e) => botonIniciar()}> Jugar </button> 
             </div>
         </div>
     );

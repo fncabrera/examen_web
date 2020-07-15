@@ -17,6 +17,7 @@ function Restaurant() {
   const [fijarBarco, setFijarBarco] = useState(false); 
   const [cantidadPorBarco, setCantidadPorBarco] = useState([0, 0, 0, 0]); // para ir guardando cuantos ya van asignados de cada tipo de barco
   const [asignacionCasillas, setAsignacionCasillas] = useState(new Array(100).fill("",0,100))
+  const [casillasValidas, setCasillasValidas] = useState(new Array(100).fill(false,0,100))
   const [inicioJugada, setInicioJugada] = useState(new Array(100).fill(false,0,100)) //para indicar si en una jugada una casilla esta siendo marcada como inicio
   const [jugando, setJugando] = useState(false);
   const [jugada, setJugada] = useState(""); // puede ser vacio, mover o disparar
@@ -33,6 +34,10 @@ function Restaurant() {
   const [fin, setFin] = useState(false); // 1 si gano yo, 2 si gana el computador
   const [esperandoIniciar, setEsperandoIniciar] = useState(true);
   const [posiciones, setPosiciones] = useState([])
+  const [accionAux, setAccionAux] = useState(0); //1 para Mover, 2 para disparar
+
+
+
   if (!token){
     correrApi().then(resp => {setToken(resp.token); iniciarJuego(resp.token).then(resp => setGameId(resp.gameId))})
     //despues el setgameid tirarlo en un boton de iniciar juego
@@ -60,7 +65,7 @@ function Restaurant() {
         marca={`(${letras[aux_columna]},${aux_fila})`} fijarBarco={fijarBarco} 
         notificarBarcoAsignado={notificarBarcoAsignado} 
         seleccionarCasillaJugadaInicio={seleccionarCasillaJugadaInicio} nuevoBarco={nuevoBarco} desde={aMover}
-        muevoFin={muevoFin} hundido={hundido[i]} disparo={disparo}/>);
+        muevoFin={muevoFin} hundido={hundido[i]} disparo={disparo} valida={casillasValidas[i]}/>);
       aux_columna = aux_columna + 1;
       contador_aux = contador_aux + 1;
       if (contador_aux == 10) {
@@ -129,25 +134,51 @@ function Restaurant() {
   // funcion que se ejecuta en Jugar para saber que esta queriendo realizar una jugada
   // asi ahora se puede ir a revisar la celda con la que se quiere jugar
   function comenzarJugada(jugada) {
-    setJugada(jugada);
-    setJugando(true);
-    setTurno(1);
-    setEsperandoIniciar(false);
-    var aux = []
-    getShips(token, gameId).then(resp => {for (var i =0; i < 10; i++) {aux.push([resp[i] ? resp[i].position.row : "-", resp[i] ? resp[i].position.column : "-"])}})
-    setPosiciones(aux)
+    if (jugada === "cancelar"){
+      setJugada("");
+      setSeleccionarInicio(false);
+      setAMover(200);
+      setNuevoBarco(false);
+      setInicioJugada(new Array(100).fill(false,0,100));
+      setAccionAux(0);
+      setCasillasValidas(new Array(100).fill(false,0,100));
+
+    } else {
+      if (jugada === "mover") {
+        setAccionAux(1);
+      } else if (jugada === "disparar") {
+        setAccionAux(2);
+      }
+      setJugada(jugada);
+      setJugando(true);
+      setTurno(1);
+      setEsperandoIniciar(false);
+      var aux = []
+      getShips(token, gameId).then(resp => {for (var i =0; i < 10; i++) {aux.push([resp[i] ? resp[i].position.row : "-", resp[i] ? resp[i].position.column : "-"])}})
+      setPosiciones(aux)
+    }
   }
 
 
 
-  function seleccionarCasillaJugadaInicio(idCelda, identificador) {
+  function seleccionarCasillaJugadaInicio(idCelda, identificador, celdasValidasMov, celdasValidasDis) {
     setSeleccionarInicio(true);
     setAMover(idCelda);
     setNuevoBarco(identificador);
     var aux_inicio_jugada = [...inicioJugada]
     aux_inicio_jugada[idCelda] = true;
     setInicioJugada(aux_inicio_jugada);
-    console.log(idCelda, identificador)
+    var aux_validas = [...casillasValidas]
+    if (jugada === "mover"){
+      for (var i = 0; i < celdasValidasMov.length; i++){
+        aux_validas[celdasValidasMov[i]] = true;
+      }
+    } else if (jugada === "disparar") {
+      for (var i = 0; i < celdasValidasDis.length; i++){
+        aux_validas[celdasValidasDis[i]] = true;
+      }
+    }
+    setCasillasValidas(aux_validas);
   }
 
   // funcion para usar en Celda que mueve lo de una celda hacia esta otra
@@ -173,6 +204,7 @@ function Restaurant() {
     aux_inicio_jugada[aMover] = false;
     setInicioJugada(aux_inicio_jugada);
     setAMover(200);
+    setCasillasValidas(new Array(100).fill(false,0,100))
     //getShips(token, gameId).then(resp => console.log(resp))
   }
 
@@ -212,6 +244,7 @@ function Restaurant() {
     aux_inicio_jugada[aMover] = false;
     setInicioJugada(aux_inicio_jugada);
     setAMover(200);
+    setCasillasValidas(new Array(100).fill(false,0,100));
   }
 
   function aplicarJugadaOponente(resp, jugadaMia) {
@@ -301,18 +334,22 @@ function Restaurant() {
     setEsperandoIniciar(true);
   }
 
+  function rendirse(){
+    setFin(2);
+  }
+
   return (
     <div className="container">
       {(fin === 1)  && (
-        <div>
+        <div className="resultado">
           <div>{"¡Has ganado!"}</div>
-          <div><button onClick={() => botonNuevoJuego()}> Nuevo Juego</button></div>
+          <div><button className="button" onClick={() => botonNuevoJuego()}> Nuevo Juego</button></div>
         </div>
       )}
       {(fin === 2)  && (
-        <div>
+        <div className="resultado">
           <div>{"¡Has perdido!"}</div>
-          <div><button onClick={() => botonNuevoJuego()}> Nuevo Juego</button></div>
+          <div><button className="button" onClick={() => botonNuevoJuego()}> Nuevo Juego</button></div>
         </div>
       )}
       {!fin && (
@@ -359,7 +396,7 @@ function Restaurant() {
         {(jugando && !fin) && (
           <div>
             <div>
-              {<Jugar comenzarJugada={comenzarJugada} turno={turno}/>}
+              {<Jugar comenzarJugada={comenzarJugada} turno={turno} rendirse={rendirse} accion={accionAux}/>}
             </div>
             <div className="log">
               {mensajes}
