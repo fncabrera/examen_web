@@ -32,12 +32,12 @@ function Restaurant() {
   const [events, setEvents] = useState([]);
   const [fin, setFin] = useState(false); // 1 si gano yo, 2 si gana el computador
   const [esperandoIniciar, setEsperandoIniciar] = useState(true);
-
+  const [posiciones, setPosiciones] = useState([])
   if (!token){
     correrApi().then(resp => {setToken(resp.token); iniciarJuego(resp.token).then(resp => setGameId(resp.gameId))})
     //despues el setgameid tirarlo en un boton de iniciar juego
   }
-
+  console.log(posiciones, "asd")
 
   function creaMarcoSup() {
     var letras = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
@@ -133,7 +133,12 @@ function Restaurant() {
     setJugando(true);
     setTurno(1);
     setEsperandoIniciar(false);
+    var aux = []
+    getShips(token, gameId).then(resp => {for (var i =0; i < 10; i++) {aux.push([resp[i] ? resp[i].position.row : "-", resp[i] ? resp[i].position.column : "-"])}})
+    setPosiciones(aux)
   }
+
+
 
   function seleccionarCasillaJugadaInicio(idCelda, identificador) {
     setSeleccionarInicio(true);
@@ -189,15 +194,13 @@ function Restaurant() {
   }
 
   function disparo(idCelda, marca){
-    // aca verificar despues que si hundo uno del otro equipo, marcar la casilla como hundido
-    if (asignacionCasillas[idCelda]) {
-      var aux_hundido = [...hundido]
-      aux_hundido[idCelda] = true;
-      sethundido(aux_hundido);
-    }
+
     //agrego mensaje
-    var aux_mensajes = <div className="log-mensajes">[Usuario]: Disparo - {nuevoBarco} - {marca[1]+marca[3]}</div>
+    var aux_mensajes = <div className="log-mensajes">[Usuario]: Disparo - {nuevoBarco} - {marca[1]+(marca.slice(3,5) == 10 ? marca.slice(3,5) : marca[3])}</div>
+    console.log(marca, marca.slice(3,5))
+    
     const tupla = crearCeldasNumeradas()[idCelda];
+
     var dict_action = {"type": "FIRE", "ship": nuevoBarco === "P1" ? "AC1" : nuevoBarco, "row": tupla[1], "column": tupla[0]}
     setTurno(2);
     accion(token, gameId, dict_action, []).then(resp => {aplicarJugadaOponente(resp, aux_mensajes)})
@@ -237,9 +240,8 @@ function Restaurant() {
 
   // verifico si el ataque del computador me mato algun barco
   function verificarAtaque(col, row) {
-    getShips(token, gameId).then(resp => console.log(resp))
-    var dict_action = {"type": "FIRE", "ship": "F1", "row": 0, "column": 0}
-    pruebaAccion(token, gameId, dict_action).then(resp => console.log(resp))
+    //var dict_action = {"type": "FIRE", "ship": "F1", "row": 0, "column": 0}
+    //pruebaAccion(token, gameId, dict_action).then(resp => console.log(resp))
 
     var celdas = crearCeldasNumeradas(); // col, row
     for (var i = 0; i < celdas.length; i++) {
