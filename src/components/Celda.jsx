@@ -3,8 +3,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 function Celda(props) {
     const [identificador, setIdentificador] = useState(false); //identificador del barco que esta actualmente
 
-
-        
     function crearCeldasNumeradas(){
         var tupla_celdas = [];
         var fila = 0;
@@ -27,16 +25,16 @@ function Celda(props) {
         var tupla_hacia = celdas[props.id];
         if (tupla_desde[0] == tupla_hacia[0]) {
             if (tupla_desde[1] - tupla_hacia[1] > 0){
-                return ["Norte", Math.abs(tupla_desde[1] - tupla_hacia[1]) ]
+                return ["NORTH", Math.abs(tupla_desde[1] - tupla_hacia[1]) ]
             } else if (tupla_desde[1] - tupla_hacia[1] < 0){
-                return ["Sur", Math.abs(tupla_desde[1] - tupla_hacia[1])]
+                return ["SOUTH", Math.abs(tupla_desde[1] - tupla_hacia[1])]
             }   
         }
         if (tupla_desde[1] == tupla_hacia[1]) {
             if (tupla_desde[0] - tupla_hacia[0] > 0){
-                return ["Oeste", Math.abs(tupla_desde[0] - tupla_hacia[0])]
+                return ["WEST", Math.abs(tupla_desde[0] - tupla_hacia[0])]
             } else if (tupla_desde[0] - tupla_hacia[0] < 0){
-                return ["Este", Math.abs(tupla_desde[0] - tupla_hacia[0])]
+                return ["EAST", Math.abs(tupla_desde[0] - tupla_hacia[0])]
             }   
         }
     }
@@ -139,7 +137,7 @@ function Celda(props) {
             } else if (props.jugada === "disparar") {
  
                 if (verificarDisparo()){
-                    props.disparo(props.id);
+                    props.disparo(props.id, props.marca);
                 }
                 
             } else if (!props.asignacion){

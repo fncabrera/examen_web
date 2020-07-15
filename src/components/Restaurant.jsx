@@ -5,7 +5,11 @@ import Celda from "./Celda";
 import CeldaMarco from "./CeldaMarco";
 import Menu from "./Menu";
 import Jugar from "./Jugar";
-import correrApi from "../auxiliar/api"
+import correrApi from "../api/token";
+import iniciarJuego from "../api/iniciarJuego";
+import accion from "../api/accion";
+import getShips from "../api/getShips";
+import pruebaAccion from "../api/pruebaAccion";
 
 function Restaurant() {
 
@@ -17,15 +21,23 @@ function Restaurant() {
   const [jugando, setJugando] = useState(false);
   const [jugada, setJugada] = useState(""); // puede ser vacio, mover o disparar
   const [seleccionarInicio, setSeleccionarInicio] = useState(false); // para saber que ya se selecciono la primera celda (ahora ver a dd se ataca/mueve)
-  const [turno, setTurno] = useState(false);
   const [nuevoBarco, setNuevoBarco] = useState(false); // el identificador del nuevo barco que quizas se mueve
   const [aMover, setAMover] = useState(200); // id de la celda que quizas pierda a su barco
   const [hundido, sethundido] = useState(new Array(100).fill(false,0,100)) //para indicar si en una jugada una casilla esta siendo marcada como inicio
   const [mensajes, setMensajes] = useState([]);
-  const [token, setToken] = useState();
+  const [token, setToken] = useState(false);
+  const [gameId, setGameId] = useState(false);
+  const [jugadaOponente, setJugadaOponente] = useState("");
+  const [turno, setTurno] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [fin, setFin] = useState(false); // 1 si gano yo, 2 si gana el computador
+  const [esperandoIniciar, setEsperandoIniciar] = useState(true);
 
-  //correrApi().then(resp => setToken(resp))
-  console.log(token)
+  if (!token){
+    correrApi().then(resp => {setToken(resp.token); iniciarJuego(resp.token).then(resp => setGameId(resp.gameId))})
+    //despues el setgameid tirarlo en un boton de iniciar juego
+  }
+
 
   function creaMarcoSup() {
     var letras = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
@@ -119,6 +131,8 @@ function Restaurant() {
   function comenzarJugada(jugada) {
     setJugada(jugada);
     setJugando(true);
+    setTurno(1);
+    setEsperandoIniciar(false);
   }
 
   function seleccionarCasillaJugadaInicio(idCelda, identificador) {
@@ -140,9 +154,13 @@ function Restaurant() {
     aux_asignacion_celda[aMover] = "";
     setAsignacionCasillas(aux_asignacion_celda);
     //agrego mensaje
-    var aux_mensajes = [...mensajes];
-    aux_mensajes.push(<div>[Usuario]: Mover - {nuevoBarco} - {direccion[0]} - {direccion[1]}</div>);
-    setMensajes(aux_mensajes);
+    var aux_mensajes = <div className="log-mensajes">[Usuario]: Mover - {nuevoBarco} - {direccion[0]} - {direccion[1]}</div>;
+    // mando post a la API con mi movimiento
+    // type: "MOVE", "ship": 
+    setTurno(2); // juega la máquina
+    var dict_action = {"type": "MOVE", "ship": nuevoBarco === "P1" ? "AC1" : nuevoBarco, "direction": direccion[0], "quantity": direccion[1]}
+    accion(token, gameId, dict_action, []).then(resp => {aplicarJugadaOponente(resp, aux_mensajes)})
+
     setJugada("");
     setSeleccionarInicio(false);
     setNuevoBarco(false);
@@ -150,15 +168,40 @@ function Restaurant() {
     aux_inicio_jugada[aMover] = false;
     setInicioJugada(aux_inicio_jugada);
     setAMover(200);
+    //getShips(token, gameId).then(resp => console.log(resp))
   }
 
-  function disparo(idCelda){
+  // tirar despues para backend
+  function crearCeldasNumeradas(){
+    var tupla_celdas = [];
+    var fila = 0;
+    var aux = 0;
+    var col = 0;
+    for (var i = 0; i < 100; i++) {
+      tupla_celdas.push([col, fila])
+      col = col + 1;
+      if (col == 10){
+        col = 0;
+        fila = fila + 1;
+      }
+    }
+    return tupla_celdas;
+  }
+
+  function disparo(idCelda, marca){
     // aca verificar despues que si hundo uno del otro equipo, marcar la casilla como hundido
     if (asignacionCasillas[idCelda]) {
       var aux_hundido = [...hundido]
       aux_hundido[idCelda] = true;
       sethundido(aux_hundido);
     }
+    //agrego mensaje
+    var aux_mensajes = <div className="log-mensajes">[Usuario]: Disparo - {nuevoBarco} - {marca[1]+marca[3]}</div>
+    const tupla = crearCeldasNumeradas()[idCelda];
+    var dict_action = {"type": "FIRE", "ship": nuevoBarco === "P1" ? "AC1" : nuevoBarco, "row": tupla[1], "column": tupla[0]}
+    setTurno(2);
+    accion(token, gameId, dict_action, []).then(resp => {aplicarJugadaOponente(resp, aux_mensajes)})
+
     setJugada("");
     setSeleccionarInicio(false);
     setNuevoBarco(false);
@@ -168,9 +211,109 @@ function Restaurant() {
     setAMover(200);
   }
 
+  function aplicarJugadaOponente(resp, jugadaMia) {
+    var letras = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+    var aux_mensajes = [...mensajes];
+    console.log(events)
+    aux_mensajes.unshift(jugadaMia);
+    if (resp.events){
+      for (var i = 0; i < resp.events.length; i++) {
+        if (resp.events[i].type === "HIT_SHIP" || resp.events[i].type === "SHIP_DESTROYED") {
+          aux_mensajes.unshift(<div className="log-mensajes">[COMPUTER]: [{resp.events[i].type === "HIT_SHIP" ? "HIT" : "DESTROYED"}] Ship {resp.events[i].ship}</div>);
+      } else {
+        setFin(1); //gane yo
+      }} 
+    }
+    if (resp.action.type == "FIRE"){
+      aux_mensajes.unshift(<div className="log-mensajes">[COMPUTER]: Disparo - {resp.action.ship} - {letras[resp.action.column]+(resp.action.row+1)}</div>);
+      setMensajes(aux_mensajes);
+      verificarAtaque(resp.action.column, resp.action.row);
+    } else if (resp.action.type == "MOVE"){
+      aux_mensajes.unshift(<div className="log-mensajes">[COMPUTER]: Mover - {resp.action.ship} - {resp.action.direction} - {resp.action.quantity}</div>);
+      setMensajes(aux_mensajes);
+    }
+    setTurno(1);
+  }
+
+  // verifico si el ataque del computador me mato algun barco
+  function verificarAtaque(col, row) {
+    getShips(token, gameId).then(resp => console.log(resp))
+    var dict_action = {"type": "FIRE", "ship": "F1", "row": 0, "column": 0}
+    pruebaAccion(token, gameId, dict_action).then(resp => console.log(resp))
+
+    var celdas = crearCeldasNumeradas(); // col, row
+    for (var i = 0; i < celdas.length; i++) {
+
+      if (celdas[i][0] == col &&  celdas[i][1] == row){
+        console.log("ENCONTRO");
+        if (asignacionCasillas[i]){
+          console.log(asignacionCasillas[i])
+          var cantidad_aux = [...cantidadPorBarco]
+          if (asignacionCasillas[i][0] == "F") {
+            cantidad_aux[0] = cantidad_aux[0] - 1;
+          } else if (asignacionCasillas[i][0] == "C") {
+            cantidad_aux[1] = cantidad_aux[1] - 1;
+          } else if (asignacionCasillas[i][0] == "D") {
+            cantidad_aux[2] = cantidad_aux[2] - 1;
+          } else {
+            cantidad_aux[3] = cantidad_aux[3] - 1;
+          }
+          setCantidadPorBarco(cantidad_aux);
+          var aux_asignacion = [...asignacionCasillas]
+          aux_asignacion[i] = "";
+          setAsignacionCasillas(aux_asignacion);
+          var aux_hundido = [...hundido]
+          aux_hundido[i] = true;
+          sethundido(aux_hundido);
+          console.log("ME HUNDIO UN BARCO")
+          return ;
+        }
+      }
+    }
+  }
+  console.log(cantidadPorBarco)
+
+  if (!fin && !esperandoIniciar && cantidadPorBarco[0] <= 0 && cantidadPorBarco[1] <= 0 && cantidadPorBarco[2] <= 0 && cantidadPorBarco[3] <= 0){
+    setFin(2);
+  }
+
+  function botonNuevoJuego() {
+    // todo por defecto
+    setFijarBarco(false);
+    setCantidadPorBarco([0, 0, 0, 0]); 
+    setAsignacionCasillas(new Array(100).fill("",0,100))
+    setInicioJugada(new Array(100).fill(false,0,100)) 
+    setJugando(false);
+    setJugada(""); 
+    setSeleccionarInicio(false); 
+    setNuevoBarco(false); 
+    setAMover(200); 
+    sethundido(new Array(100).fill(false,0,100)) //para indicar si en una jugada una casilla esta siendo marcada como inicio
+    setMensajes([]);
+    setToken(false);
+    setGameId(false);
+    setJugadaOponente("");
+    setTurno(false);
+    setEvents([]);
+    setFin(false); // 1 si gano yo, 2 si gana el computador
+    setEsperandoIniciar(true);
+  }
 
   return (
-    <div className="container">     
+    <div className="container">
+      {(fin === 1)  && (
+        <div>
+          <div>{"¡Has ganado!"}</div>
+          <div><button onClick={() => botonNuevoJuego()}> Nuevo Juego</button></div>
+        </div>
+      )}
+      {(fin === 2)  && (
+        <div>
+          <div>{"¡Has perdido!"}</div>
+          <div><button onClick={() => botonNuevoJuego()}> Nuevo Juego</button></div>
+        </div>
+      )}
+      {!fin && (
         <div className="tablero">
           <div className="flex-row">
             {creaMarcoSup()}
@@ -205,16 +348,16 @@ function Restaurant() {
           <div className="flex-row">
             {<CeldaMarco key={10} marca={10} limite={true}/>}{celdas.slice(90,100)}
           </div>
-        </div>   
-        {!jugando && (
+        </div>   )}
+        {(!jugando && !fin) && (
           <div className="opciones">
             {<Menu funcionAsignar={asignarBarcoMenu} cantidadAsignados={cantidadPorBarco} reiniciar={reiniciarMenu} comenzarJugada={comenzarJugada}/>}
           </div>
         )}
-        {jugando && (
+        {(jugando && !fin) && (
           <div>
             <div>
-              {<Jugar comenzarJugada={comenzarJugada}/>}
+              {<Jugar comenzarJugada={comenzarJugada} turno={turno}/>}
             </div>
             <div className="log">
               {mensajes}
@@ -222,7 +365,6 @@ function Restaurant() {
           </div>
         )}
         
-      
     </div>
   );
 }

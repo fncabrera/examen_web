@@ -146,13 +146,17 @@
 .log{
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  text-align: left;
   align-content: space-between;
-  height: auto;
+  height: 340px;
+  width: 400px;
   margin-top: 30px;
   padding: 15px;
   border-color: black;
   border-style: solid;
+  overflow: scroll;
 
-
+}
+.log-mensajes{
+  padding: 3px;
 }
