@@ -42,7 +42,7 @@ function Restaurant() {
     correrApi().then(resp => {setToken(resp.token); iniciarJuego(resp.token).then(resp => setGameId(resp.gameId))})
     //despues el setgameid tirarlo en un boton de iniciar juego
   }
-  console.log(posiciones, "asd")
+  //console.log(posiciones, "asd")
 
   function creaMarcoSup() {
     var letras = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
@@ -205,6 +205,7 @@ function Restaurant() {
     setInicioJugada(aux_inicio_jugada);
     setAMover(200);
     setCasillasValidas(new Array(100).fill(false,0,100))
+    setAccionAux(0);
     //getShips(token, gameId).then(resp => console.log(resp))
   }
 
@@ -229,7 +230,6 @@ function Restaurant() {
 
     //agrego mensaje
     var aux_mensajes = <div className="log-mensajes">[Usuario]: Disparo - {nuevoBarco} - {marca[1]+(marca.slice(3,5) == 10 ? marca.slice(3,5) : marca[3])}</div>
-    console.log(marca, marca.slice(3,5))
     
     const tupla = crearCeldasNumeradas()[idCelda];
 
@@ -245,12 +245,13 @@ function Restaurant() {
     setInicioJugada(aux_inicio_jugada);
     setAMover(200);
     setCasillasValidas(new Array(100).fill(false,0,100));
+    setAccionAux(0)
   }
 
   function aplicarJugadaOponente(resp, jugadaMia) {
     var letras = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
     var aux_mensajes = [...mensajes];
-    console.log(events)
+  
     aux_mensajes.unshift(jugadaMia);
     if (resp.events){
       for (var i = 0; i < resp.events.length; i++) {
@@ -262,8 +263,8 @@ function Restaurant() {
     }
     if (resp.action.type == "FIRE"){
       aux_mensajes.unshift(<div className="log-mensajes">[COMPUTER]: Disparo - {resp.action.ship} - {letras[resp.action.column]+(resp.action.row+1)}</div>);
-      setMensajes(aux_mensajes);
-      verificarAtaque(resp.action.column, resp.action.row);
+      
+      verificarAtaque(resp.action.column, resp.action.row, aux_mensajes);
     } else if (resp.action.type == "MOVE"){
       aux_mensajes.unshift(<div className="log-mensajes">[COMPUTER]: Mover - {resp.action.ship} - {resp.action.direction} - {resp.action.quantity}</div>);
       setMensajes(aux_mensajes);
@@ -271,18 +272,20 @@ function Restaurant() {
     setTurno(1);
   }
 
+  
   // verifico si el ataque del computador me mato algun barco
-  function verificarAtaque(col, row) {
-    //var dict_action = {"type": "FIRE", "ship": "F1", "row": 0, "column": 0}
+  function verificarAtaque(col, row, aux_mensajes) {
+    //var dict_action = {"type": "FIRE", "ship": "F1", "row": 0, "column": 2}
     //pruebaAccion(token, gameId, dict_action).then(resp => console.log(resp))
+
 
     var celdas = crearCeldasNumeradas(); // col, row
     for (var i = 0; i < celdas.length; i++) {
 
       if (celdas[i][0] == col &&  celdas[i][1] == row){
-        console.log("ENCONTRO");
+        
         if (asignacionCasillas[i]){
-          console.log(asignacionCasillas[i])
+          
           var cantidad_aux = [...cantidadPorBarco]
           if (asignacionCasillas[i][0] == "F") {
             cantidad_aux[0] = cantidad_aux[0] - 1;
@@ -295,18 +298,23 @@ function Restaurant() {
           }
           setCantidadPorBarco(cantidad_aux);
           var aux_asignacion = [...asignacionCasillas]
+          aux_mensajes.unshift(<div className="log-mensajes">[Usuario]: [HIT] Ship {aux_asignacion[i]}</div>);
+          aux_mensajes.unshift(<div className="log-mensajes">[Usuario]: [Destroyed] Ship {aux_asignacion[i]}</div>);
+
           aux_asignacion[i] = "";
           setAsignacionCasillas(aux_asignacion);
           var aux_hundido = [...hundido]
           aux_hundido[i] = true;
           sethundido(aux_hundido);
-          console.log("ME HUNDIO UN BARCO")
+          
+          setMensajes(aux_mensajes);
           return ;
         }
       }
     }
+    setMensajes(aux_mensajes);
   }
-  console.log(cantidadPorBarco)
+  
 
   if (!fin && !esperandoIniciar && cantidadPorBarco[0] <= 0 && cantidadPorBarco[1] <= 0 && cantidadPorBarco[2] <= 0 && cantidadPorBarco[3] <= 0){
     setFin(2);

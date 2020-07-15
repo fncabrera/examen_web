@@ -77,7 +77,7 @@ function Celda(props) {
         var celdasValidas = [];
         for (var i = 0; i < 100; i++){
             tupla_hacia = celdas[i];
-            console.log(props.asignacion)
+            
             if (props.asignacion[0] == "F") {
                 if ((tupla_desde[0] == tupla_hacia[0] && Math.abs(tupla_desde[1] - tupla_hacia[1]) <= 4) || 
                 (tupla_desde[1] == tupla_hacia[1] && Math.abs(tupla_desde[0] - tupla_hacia[0]) <= 4)) {
@@ -110,7 +110,7 @@ function Celda(props) {
         var celdasValidas = [];
         for (var i = 0; i < 100; i++){
             tupla_hacia = celdas[i];
-            console.log(props.asignacion)
+            
             if (props.asignacion[0] == "F") {
                 if ((tupla_desde[0] == tupla_hacia[0] && Math.abs(tupla_desde[1] - tupla_hacia[1]) <= 2) || 
                 (tupla_desde[1] == tupla_hacia[1] && Math.abs(tupla_desde[0] - tupla_hacia[0]) <= 2)) {
@@ -192,15 +192,14 @@ function Celda(props) {
             }
             // es el destino de la jugada
 
-        console.log(props.jugada)
+        
         } else if (props.jugada && props.seleccionarInicio) {
             if (props.asignacion && props.jugada === "mover") {
-                if (props.hundido){
-                    alert("Este lugar no esta disponible, hay un barco hundido")
+                alert("Ya tienes un barco ahí, no puedes moverte para allá")
 
-                } else {
-                    alert("Ya tienes un barco ahí, no puedes moverte para allá")
-                }
+            } if (props.hundido && props.jugada === "mover") {
+                alert("Este lugar no esta disponible, hay un barco hundido")
+                 
             } else if (props.jugada === "disparar") {
  
                 if (verificarDisparo()){

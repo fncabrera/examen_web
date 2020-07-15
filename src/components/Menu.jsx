@@ -29,11 +29,11 @@ function Menu(props) {
         var restantes_crucero = 3 - props.cantidadAsignados[1];
         var restantes_destructor = 2 - props.cantidadAsignados[2]
         var restantes_portaviones = 1 - props.cantidadAsignados[3];
-        //if (restantes_destructor !== 0 || restantes_fragata !== 0 || restantes_crucero !== 0 || restantes_portaviones !== 0) {
-           // alert("Aun te quedan barcos por asignar")
-        //} else {
-        props.comenzarJugada("")
-        //}
+        if (restantes_destructor !== 0 || restantes_fragata !== 0 || restantes_crucero !== 0 || restantes_portaviones !== 0) {
+            alert("Aun te quedan barcos por asignar")
+        } else {
+            props.comenzarJugada("")
+        }
     }
     
     return (
